@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Telegram 机器人管理系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: #f5f5f5;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px 0;
+            margin-bottom: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        header h1 {
+            font-size: 28px;
+            margin-bottom: 5px;
+        }
+
+        .nav-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        nav {
+            display: flex;
+            gap: 20px;
+        }
+
+        nav button {
+            padding: 10px 20px;
+            border: none;
+            background: white;
+            color: #333;
+            cursor: pointer;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        nav button.active {
+            background: #667eea;
+            color: white;
+        }
+
+        nav button:hover {
+            background: #f0f0f0;
+        }
+
+        .logout-btn {
+            background: #ef4444;
+            color: white;
+        }
+
+        .logout-btn:hover {
+            background: #dc2626;
+        }
+
+        .section {
+            display: none;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        .section h2 {
+            margin-bottom: 20px;
+            color: #333;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #555;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        button.btn {
+            padding: 10px 20px;
+            border: none;
+            background: #667eea;
+            color: white;
+            cursor: pointer;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: all 0.3s;
+            margin-right: 10px;
+        }
+
+        button.btn:hover {
+            background: #5568d3;
+        }
+
+        button.btn-danger {
+            background: #ef4444;
+        }
+
+        button.btn-danger:hover {
+            background: #dc2626;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        table th {
+            background: #f9f9f9;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            color: #555;
+            border-bottom: 2px solid #ddd;
+        }
+
+        table td {
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+        }
+
+        table tr:hover {
+            background: #f9f9f9;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .status.active {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .status.inactive {
+            background: #fee2e2;
+            color: #7f1d1d;
+        }
+
+        .status.completed {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .status.pending {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .status.failed {
+            background: #fee2e2;
+            color: #7f1d1d;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .modal-content h3 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .modal-footer {
+            margin-top: 20px;
+            text-align: right;
+        }
+
+        .alert {
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+            display: none;
+        }
+
+        .alert.success {
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #6ee7b7;
+            display: block;
+        }
+
+        .alert.error {
+            background: #fee2e2;
+            color: #7f1d1d;
+            border: 1px solid #fca5a5;
+            display: block;
+        }
+
+        .login-container {
+            max-width: 400px;
+            margin: 50px auto;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .login-container h2 {
+            margin-bottom: 30px;
+            text-align: center;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div id="loginPage" class="login-container">
+        <h2>🤖 Telegram 机器人管理系统</h2>
+        <div id="alert" class="alert"></div>
+        <div class="form-group">
+            <label>用户名：</label>
+            <input type="text" id="username" placeholder="输入用户名">
+        </div>
+        <div class="form-group">
+            <label>密码：</label>
+            <input type="password" id="password" placeholder="输入密码">
+        </div>
+        <button class="btn" style="width: 100%;" onclick="login()">登录</button>
+    </div>
+
+    <div id="mainApp" style="display: none;">
+        <div class="container">
+            <header>
+                <div class="nav-top">
+                    <div>
+                        <h1>🤖 Telegram 机器人管理系统</h1>
+                        <p>管理机器人、用户组和支付配置</p>
+                    </div>
+                    <button class="logout-btn" onclick="logout()">退出登录</button>
+                </div>
+            </header>
+
+            <nav>
+                <button class="nav-btn active" data-section="bots">🤖 机器人管理</button>
+                <button class="nav-btn" data-section="groups">👥 用户组管理</button>
+                <button class="nav-btn" data-section="subscriptions">📊 订阅管理</button>
+                <button class="nav-btn" data-section="payments">💳 支付记录</button>
+            </nav>
+
+            <div id="alert" class="alert"></div>
+
+            <!-- 机器人管理 -->
+            <div id="bots" class="section active">
+                <h2>机器人管理</h2>
+                <button class="btn" onclick="openBotModal()">➕ 添加机器人</button>
+                
+                <table id="botsTable">
+                    <thead>
+                        <tr>
+                            <th>机器人名称</th>
+                            <th>Bot ID</th>
+                            <th>状态</th>
+                            <th>创建时间</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+
+            <!-- 用户组管理 -->
+            <div id="groups" class="section">
+                <h2>用户组管理</h2>
+                <div class="form-group">
+                    <label>选择机器人：</label>
+                    <select id="botSelect" onchange="loadGroups()">
+                        <option value="">-- 请选择机器人 --</option>
+                    </select>
+                </div>
+                
+                <button class="btn" onclick="openGroupModal()">➕ 添加用户组</button>
+                
+                <table id="groupsTable">
+                    <thead>
+                        <tr>
+                            <th>组名称</th>
+                            <th>价格</th>
+                            <th>时长（天）</th>
+                            <th>描述</th>
+                            <th>状态</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+
+            <!-- 订阅管理 -->
+            <div id="subscriptions" class="section">
+                <h2>订阅管理</h2>
+                <table id="subscriptionsTable">
+                    <thead>
+                        <tr>
+                            <th>用户ID</th>
+                            <th>机器人</th>
+                            <th>套餐</th>
+                            <th>到期时间</th>
+                            <th>状态</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+
+            <!-- 支付记录 -->
+            <div id="payments" class="section">
+                <h2>支付记录</h2>
+                <table id="paymentsTable">
+                    <thead>
+                        <tr>
+                            <th>用户ID</th>
+                            <th>金额</th>
+                            <th>订单号</th>
+                            <th>状态</th>
+                            <th>创建时间</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- 机器人模态框 -->
+    <div id="botModal" class="modal">
+        <div class="modal-content">
+            <h3 id="botModalTitle">添加机器人</h3>
+            <div class="form-group">
+                <label>机器人名称：</label>
+                <input type="text" id="botName" placeholder="如：推广机器人">
+            </div>
+            <div class="form-group">
+                <label>Bot Token：</label>
+                <input type="text" id="botToken" placeholder="从 @BotFather 获取">
+            </div>
+            <div class="form-group">
+                <label>Bot ID：</label>
+                <input type="text" id="botId" placeholder="机器人的数字ID">
+            </div>
+            <div class="modal-footer">
+                <button class="btn" onclick="saveBotModal()">保存</button>
+                <button class="btn btn-danger" onclick="closeBotModal()">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 用户组模态框 -->
+    <div id="groupModal" class="modal">
+        <div class="modal-content">
+            <h3>添加用户组</h3>
+            <div class="form-group">
+                <label>组名称：</label>
+                <input type="text" id="groupName" placeholder="如：VIP会员">
+            </div>
+            <div class="form-group">
+                <label>价格（元）：</label>
+                <input type="number" id="groupPrice" step="0.01" placeholder="如：9.99">
+            </div>
+            <div class="form-group">
+                <label>时长（天）：</label>
+                <input type="number" id="groupDuration" placeholder="如：30">
+            </div>
+            <div class="form-group">
+                <label>描述：</label>
+                <textarea id="groupDescription" placeholder="组的描述信息"></textarea>
+            </div>
+            <div class="modal-footer">
+                <button class="btn" onclick="saveGroupModal()">保存</button>
+                <button class="btn btn-danger" onclick="closeGroupModal()">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = '/api';
+
+        // 检查登录状态
+        function checkAuth() {
+            fetch(`${API_URL}/admin/auth.php?action=check`)
+                .then(r => r.json())
+                .then(data => {
+                    if (data.authenticated) {
+                        document.getElementById('loginPage').style.display = 'none';
+                        document.getElementById('mainApp').style.display = 'block';
+                        loadBots();
+                    } else {
+                        document.getElementById('loginPage').style.display = 'block';
+                        document.getElementById('mainApp').style.display = 'none';
+                    }
+                })
+                .catch(e => {
+                    console.error('检查认证失败:', e);
+                    document.getElementById('loginPage').style.display = 'block';
+                    document.getElementById('mainApp').style.display = 'none';
+                });
+        }
+
+        function login() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            if (!username || !password) {
+                showAlert('请输入用户名和密码', 'error');
+                return;
+            }
+
+            fetch(`${API_URL}/admin/auth.php?action=login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
+            })
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success) {
+                        showAlert(data.message || '登录成功', 'success');
+                        setTimeout(() => {
+                            checkAuth();
+                        }, 500);
+                    } else {
+                        showAlert(data.error || '登录失败', 'error');
+                    }
+                })
+                .catch(e => showAlert('登录失败: ' + e.message, 'error'));
+        }
+
+        function logout() {
+            fetch(`${API_URL}/admin/auth.php?action=logout`, { method: 'POST' })
+                .then(r => r.json())
+                .then(data => {
+                    document.getElementById('username').value = '';
+                    document.getElementById('password').value = '';
+                    checkAuth();
+                })
+                .catch(e => showAlert('退出失败: ' + e.message, 'error'));
+        }
+
+        // 导航切换
+        document.querySelectorAll('.nav-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+                
+                this.classList.add('active');
+                document.getElementById(this.dataset.section).classList.add('active');
+
+                if (this.dataset.section === 'bots') {
+                    loadBots();
+                } else if (this.dataset.section === 'groups') {
+                    loadBotSelect();
+                } else if (this.dataset.section === 'subscriptions') {
+                    loadSubscriptions();
+                } else if (this.dataset.section === 'payments') {
+                    loadPayments();
+                }
+            });
+        });
+
+        function showAlert(message, type) {
+            const alert = document.getElementById('alert');
+            alert.textContent = message;
+            alert.className = `alert ${type}`;
+            setTimeout(() => {
+                alert.classList.remove(type);
+            }, 3000);
+        }
+
+        // 机器人管理
+        function loadBots() {
+            fetch(`${API_URL}/admin/bots.php?action=list`)
+                .then(r => r.json())
+                .then(data => {
+                    const tbody = document.querySelector('#botsTable tbody');
+                    tbody.innerHTML = '';
+                    
+                    data.data.forEach(bot => {
+                        const row = `
+                            <tr>
+                                <td>${bot.bot_name}</td>
+                                <td>${bot.bot_id}</td>
+                                <td><span class="status ${bot.status}">${bot.status === 'active' ? '✓ 活跃' : '✗ 停用'}</span></td>
+                                <td>${new Date(bot.created_at).toLocaleDateString('zh-CN')}</td>
+                                <td>
+                                    <button class="btn" onclick="editBot(${bot.id})">编辑</button>
+                                    <button class="btn btn-danger" onclick="deleteBot(${bot.id})">删除</button>
+                                </td>
+                            </tr>
+                        `;
+                        tbody.innerHTML += row;
+                    });
+                })
+                .catch(e => showAlert('加载失败: ' + e.message, 'error'));
+        }
+
+        function openBotModal() {
+            document.getElementById('botModalTitle').textContent = '添加机器人';
+            document.getElementById('botName').value = '';
+            document.getElementById('botToken').value = '';
+            document.getElementById('botId').value = '';
+            document.getElementById('botModal').classList.add('active');
+        }
+
+        function closeBotModal() {
+            document.getElementById('botModal').classList.remove('active');
+        }
+
+        function saveBotModal() {
+            const data = {
+                bot_name: document.getElementById('botName').value,
+                bot_token: document.getElementById('botToken').value,
+                bot_id: document.getElementById('botId').value
+            };
+
+            if (!data.bot_name || !data.bot_token || !data.bot_id) {
+                showAlert('请填入所有字段', 'error');
+                return;
+            }
+
+            fetch(`${API_URL}/admin/bots.php?action=add`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            })
+                .then(r => r.json())
+                .then(res => {
+                    if (res.success) {
+                        showAlert('添加成功！', 'success');
+                        closeBotModal();
+                        loadBots();
+                    } else {
+                        showAlert(res.error || '添加失败', 'error');
+                    }
+                })
+                .catch(e => showAlert('保存失败: ' + e.message, 'error'));
+        }
+
+        function deleteBot(id) {
+            if (confirm('确定要删除此机器人吗？')) {
+                fetch(`${API_URL}/admin/bots.php?action=delete`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id })
+                })
+                    .then(r => r.json())
+                    .then(res => {
+                        showAlert('删除成功', 'success');
+                        loadBots();
+                    })
+                    .catch(e => showAlert('删除失败: ' + e.message, 'error'));
+            }
+        }
+
+        // 用户组管理
+        function loadBotSelect() {
+            fetch(`${API_URL}/admin/bots.php?action=list`)
+                .then(r => r.json())
+                .then(data => {
+                    const select = document.getElementById('botSelect');
+                    select.innerHTML = '<option value="">-- 请选择机器人 --</option>';
+                    
+                    data.data.forEach(bot => {
+                        const option = document.createElement('option');
+                        option.value = bot.id;
+                        option.textContent = bot.bot_name;
+                        select.appendChild(option);
+                    });
+                })
+                .catch(e => showAlert('加载失败: ' + e.message, 'error'));
+        }
+
+        function loadGroups() {
+            const botId = document.getElementById('botSelect').value;
+            if (!botId) return;
+
+            fetch(`${API_URL}/admin/groups.php?action=list&bot_id=${botId}`)
+                .then(r => r.json())
+                .then(data => {
+                    const tbody = document.querySelector('#groupsTable tbody');
+                    tbody.innerHTML = '';
+                    
+                    data.data.forEach(group => {
+                        const row = `
+                            <tr>
+                                <td>${group.group_name}</td>
+                                <td>¥${group.price}</td>
+                                <td>${group.duration_days} 天</td>
+                                <td>${group.group_description || '-'}</td>
+                                <td><span class="status ${group.status}">${group.status === 'active' ? '✓ 活跃' : '✗ 停用'}</span></td>
+                                <td>
+                                    <button class="btn btn-danger" onclick="deleteGroup(${group.id})">删除</button>
+                                </td>
+                            </tr>
+                        `;
+                        tbody.innerHTML += row;
+                    });
+                })
+                .catch(e => showAlert('加载失败: ' + e.message, 'error'));
+        }
+
+        function openGroupModal() {
+            const botId = document.getElementById('botSelect').value;
+            if (!botId) {
+                showAlert('请先选择一个机器人', 'error');
+                return;
+            }
+            document.getElementById('groupName').value = '';
+            document.getElementById('groupPrice').value = '';
+            document.getElementById('groupDuration').value = '';
+            document.getElementById('groupDescription').value = '';
+            document.getElementById('groupModal').classList.add('active');
+        }
+
+        function closeGroupModal() {
+            document.getElementById('groupModal').classList.remove('active');
+        }
+
+        function saveGroupModal() {
+            const botId = document.getElementById('botSelect').value;
+            const data = {
+                bot_id: parseInt(botId),
+                group_name: document.getElementById('groupName').value,
+                price: parseFloat(document.getElementById('groupPrice').value),
+                duration_days: parseInt(document.getElementById('groupDuration').value),
+                group_description: document.getElementById('groupDescription').value
+            };
+
+            if (!data.group_name || !data.price || !data.duration_days) {
+                showAlert('请填入所有必填字段', 'error');
+                return;
+            }
+
+            fetch(`${API_URL}/admin/groups.php?action=add`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            })
+                .then(r => r.json())
+                .then(res => {
+                    if (res.success) {
+                        showAlert('添加成功！', 'success');
+                        closeGroupModal();
+                        loadGroups();
+                    } else {
+                        showAlert(res.error || '添加失败', 'error');
+                    }
+                })
+                .catch(e => showAlert('保存失败: ' + e.message, 'error'));
+        }
+
+        function deleteGroup(id) {
+            // 实现删除逻辑
+            if (confirm('确定要删除此用户组吗？')) {
+                const botId = document.getElementById('botSelect').value;
+                loadGroups();
+            }
+        }
+
+        // 订阅管理
+        function loadSubscriptions() {
+            fetch(`${API_URL}/admin/subscriptions.php?action=list`)
+                .then(r => r.json())
+                .then(data => {
+                    const tbody = document.querySelector('#subscriptionsTable tbody');
+                    tbody.innerHTML = '';
+                    
+                    data.data.forEach(sub => {
+                        const expiryDate = new Date(sub.expiry_date);
+                        const now = new Date();
+                        const daysLeft = Math.ceil((expiryDate - now) / (1000 * 60 * 60 * 24));
+
+                        const row = `
+                            <tr>
+                                <td>${sub.user_id}</td>
+                                <td>${sub.bot_name}</td>
+                                <td>${sub.group_name}</td>
+                                <td>${expiryDate.toLocaleDateString('zh-CN')}</td>
+                                <td><span class="status ${sub.status}">${sub.status === 'active' ? '✓ 活跃' : '✗ 已过期'}</span></td>
+                                <td>
+                                    <button class="btn" onclick="extendSubscription(${sub.id})">延长</button>
+                                </td>
+                            </tr>
+                        `;
+                        tbody.innerHTML += row;
+                    });
+                })
+                .catch(e => showAlert('加载失败: ' + e.message, 'error'));
+        }
+
+        function extendSubscription(id) {
+            if (confirm('确定要延长此订阅吗？')) {
+                fetch(`${API_URL}/admin/subscriptions.php?action=extend`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id })
+                })
+                    .then(r => r.json())
+                    .then(res => {
+                        if (res.success) {
+                            showAlert('延长成功', 'success');
+                            loadSubscriptions();
+                        } else {
+                            showAlert(res.error || '延长失败', 'error');
+                        }
+                    })
+                    .catch(e => showAlert('操作失败: ' + e.message, 'error'));
+            }
+        }
+
+        // 支付记录
+        function loadPayments() {
+            fetch(`${API_URL}/admin/payments.php?action=list`)
+                .then(r => r.json())
+                .then(data => {
+                    const tbody = document.querySelector('#paymentsTable tbody');
+                    tbody.innerHTML = '';
+                    
+                    data.data.forEach(payment => {
+                        const row = `
+                            <tr>
+                                <td>${payment.user_id}</td>
+                                <td>¥${payment.amount}</td>
+                                <td>${payment.out_trade_no}</td>
+                                <td><span class="status ${payment.status}">${payment.status === 'completed' ? '✓ 完成' : payment.status === 'pending' ? '⏳ 待支付' : '✗ 失败'}</span></td>
+                                <td>${new Date(payment.created_at).toLocaleDateString('zh-CN')}</td>
+                            </tr>
+                        `;
+                        tbody.innerHTML += row;
+                    });
+                })
+                .catch(e => showAlert('加载失败: ' + e.message, 'error'));
+        }
+
+        // 初始化
+        checkAuth();
+    </script>
+</body>
+</html>
